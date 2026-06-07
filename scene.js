@@ -192,8 +192,8 @@
       return 'M ' + x1.toFixed(1) + ' ' + vanishY + ' L ' + x2.toFixed(1) + ' ' + baseY;
     }
     [-1, 1].forEach(function (sign) {
-      g.appendChild(el('path', { d: railPath(sign), stroke: colors.railTie, 'stroke-width': '2.4', fill: 'none', opacity: '0.55' }));
-      g.appendChild(el('path', { d: railPath(sign), stroke: colors.goldBright, 'stroke-width': '1', fill: 'none', opacity: '0.35' }));
+      g.appendChild(el('path', { d: railPath(sign), stroke: colors.gold, 'stroke-width': '2.4', fill: 'none', opacity: '0.55' }));
+      g.appendChild(el('path', { d: railPath(sign), stroke: colors.goldBright, 'stroke-width': '1', fill: 'none', opacity: '0.5' }));
     });
     var tieCount = 22;
     for (var i = 0; i < tieCount; i++) {
@@ -290,7 +290,7 @@
     [-1, 1].forEach(function (side) {
       g.appendChild(el('path', {
         d: 'M ' + twRailX(side, 0).toFixed(1) + ',' + twRailY(0).toFixed(1) + ' L ' + twRailX(side, 1).toFixed(1) + ',' + twRailY(1).toFixed(1),
-        stroke: colors.railTie, 'stroke-width': '1.2', fill: 'none', opacity: '0.4'
+        stroke: colors.gold, 'stroke-width': '1.2', fill: 'none', opacity: '0.5'
       }));
     });
     // cross-ties spanning the gauge between the two guideway rails — spaced
@@ -322,7 +322,7 @@
     [[rdFarL, rdNearL], [rdFarR, rdNearR]].forEach(function (pair) {
       g.appendChild(el('path', {
         d: 'M ' + bandX(pair[0], pair[1], 0).toFixed(1) + ',' + laneY(0).toFixed(1) + ' L ' + bandX(pair[0], pair[1], 1).toFixed(1) + ',' + laneY(1).toFixed(1),
-        stroke: colors.railTie, 'stroke-width': '1.2', fill: 'none', opacity: '0.3'
+        stroke: colors.gold, 'stroke-width': '1.2', fill: 'none', opacity: '0.45'
       }));
     });
     var dashCount = 16;
@@ -334,7 +334,7 @@
       var x1 = bandX((rdFarL + rdFarR) / 2, (rdNearL + rdNearR) / 2, de1), y1 = laneY(de1);
       g.appendChild(el('line', {
         x1: x0.toFixed(1), y1: y0.toFixed(1), x2: x1.toFixed(1), y2: y1.toFixed(1),
-        stroke: colors.goldBright, 'stroke-width': (0.8 + de1 * 2.2).toFixed(1), opacity: ((0.18 + de1 * 0.35) * fade(de1)).toFixed(2)
+        stroke: '#f6f4ec', 'stroke-width': (0.8 + de1 * 2.2).toFixed(1), opacity: ((0.2 + de1 * 0.4) * fade(de1)).toFixed(2)
       }));
     }
     // a pair of headlight glows traveling down the roadway
