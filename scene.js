@@ -303,6 +303,7 @@
         x1: twRailX(-1, twt).toFixed(1), y1: twRailY(twt).toFixed(1),
         x2: twRailX(1, twt).toFixed(1), y2: twRailY(twt).toFixed(1),
         stroke: colors.railTie, 'stroke-width': (0.8 + twe * 2.2).toFixed(1),
+        'stroke-linecap': 'butt',
         opacity: ((0.14 + twe * 0.34) * fade(twe)).toFixed(2)
       }));
     }
