@@ -40,8 +40,8 @@
   .brand .b1 .amp { font-style: normal; font-weight: 700; color: var(--gold-bright); }
   .brand .b2 { font-size: 9px; letter-spacing: 0.42em; color: var(--ink-mute); margin-top: 4px; text-indent: 0.42em; }
   .navlinks { display: flex; align-items: center; gap: 34px; }
-  .navlinks a { font-size: 14px; color: var(--ink-soft); letter-spacing: 0.02em; transition: color .15s; }
-  .navlinks a:hover { color: var(--ink); }
+  .navlinks a:not(.btn) { font-size: 14px; color: var(--ink-soft); letter-spacing: 0.02em; transition: color .15s; }
+.navlinks a:not(.btn):hover { color: var(--ink); }
   .btn { font-family: var(--sans); font-size: 14px; font-weight: 600; letter-spacing: 0.04em; padding: 11px 22px; border-radius: 2px; cursor: pointer; transition: all .18s; display: inline-block; border: 1px solid transparent; white-space: nowrap; }
   .btn-gold { background: var(--gold); color: #10182f; }
   .btn-gold:hover { background: var(--gold-bright); }
