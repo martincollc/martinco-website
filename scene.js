@@ -1,162 +1,364 @@
-/* ============================================================
-   Martin & Company — converging infrastructure scene
-   One vanishing point under the wordmark. Three corridors:
-     LEFT   = cable-stayed BRIDGE   (structures)
-     CENTRE = ROAD                  (roadways / civil)
-     RIGHT  = RAILROAD              (transit / rail)
-   Outer angles mirror exactly about the centre line.
-   Draws into an <svg viewBox="0 0 1280 720"> with id="scene".
-   Honours window.__glow (city-light toggle) + CSS custom props.
-   ============================================================ */
+/* Martin & Company — animated hero scene
+   Renders a stylized night skyline with rail tracks receding toward
+   a vanishing point, drawn into the inline <svg id="scene"> element.
+   Colors are pulled from the page's CSS custom properties so the scene
+   always matches the site's palette. */
+
 (function () {
-  const W = 1280, H = 720;
-  const VP = { x: 640, y: 400 };
-  const FLOOR = 720;
-  if (window.__glow === undefined) window.__glow = true;
+  var svg = document.getElementById('scene');
+  if (!svg) return;
 
-  const cs = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const xAt = (bx, y) => { const t = (y - VP.y) / (FLOOR - VP.y); return VP.x + (bx - VP.x) * t; };
-  const pt  = (bx, t) => ({ x: VP.x + (bx - VP.x) * t, y: VP.y + (FLOOR - VP.y) * t });
+  var NS = 'http://www.w3.org/2000/svg';
+  var W = 1280, H = 720;
+  var HORIZON = 430; // y-position of the horizon line
 
-  const NS = "http://www.w3.org/2000/svg";
-  const make = (tag, attrs) => { const el = document.createElementNS(NS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); return el; };
-  const poly = (pts, attrs) => make("polygon", Object.assign({ points: pts.map(p => p.x + "," + p.y).join(" ") }, attrs));
-  const line = (x1, y1, x2, y2, attrs) => make("line", Object.assign({ x1, y1, x2, y2 }, attrs));
-
-  function build() {
-    const svg = document.getElementById("scene");
-    if (!svg) return;
-    while (svg.firstChild) svg.removeChild(svg.firstChild);
-
-    const GOLD = cs("--gold"), GOLDB = cs("--gold-bright");
-
-    const defs = make("defs", {});
-    defs.innerHTML = `
-      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${cs('--sky-top')}"/>
-        <stop offset="55%" stop-color="${cs('--sky-mid')}"/>
-        <stop offset="100%" stop-color="${cs('--sky-low')}"/>
-      </linearGradient>
-      <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${cs('--ground-far')}"/>
-        <stop offset="100%" stop-color="${cs('--ground-near')}"/>
-      </linearGradient>
-      <radialGradient id="haze" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="${cs('--sky-low')}" stop-opacity="0.9"/>
-        <stop offset="100%" stop-color="${cs('--sky-low')}" stop-opacity="0"/>
-      </radialGradient>
-      <radialGradient id="vpglow" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="${GOLDB}" stop-opacity="0.55"/>
-        <stop offset="100%" stop-color="${GOLDB}" stop-opacity="0"/>
-      </radialGradient>
-      <linearGradient id="goldray" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${GOLD}" stop-opacity="0.12"/>
-        <stop offset="100%" stop-color="${GOLDB}" stop-opacity="0.95"/>
-      </linearGradient>`;
-    svg.appendChild(defs);
-
-    // sky
-    svg.appendChild(make("rect", { x: 0, y: 0, width: W, height: VP.y, fill: "url(#sky)" }));
-
-    // skyline
-    const sky = make("g", {});
-    const buildings = [
-      [388,70,132],[452,58,178],[520,84,150],[596,66,232],[640,54,286],
-      [690,70,210],[760,90,168],[842,60,138],[905,74,116],[330,52,96],[958,56,104]
-    ].sort((a,b)=>a[2]-b[2]);
-    buildings.forEach(([cx,w,h]) => {
-      const x = cx - w/2, top = VP.y - h;
-      const g = make("g", {});
-      g.appendChild(make("rect", { x, y: top, width: w, height: h, fill: cs('--building'), stroke: cs('--building-edge'), "stroke-width": 1 }));
-      if (h > 220) g.appendChild(line(cx, top, cx, top - 22, { stroke: cs('--building-edge'), "stroke-width": 2 }));
-      const cols = Math.max(2, Math.floor(w/18)), rows = Math.floor(h/24);
-      const density = window.__glow ? 0.16 : 0;
-      for (let r=0;r<rows;r++) for (let c=0;c<cols;c++) {
-        if (Math.random() > density) continue;
-        const wx = x + 7 + c*(w-12)/cols, wy = top + 12 + r*22;
-        if (wy > VP.y - 8) continue;
-        g.appendChild(make("rect", { x: wx, y: wy, width: 4, height: 6, fill: cs('--window'), opacity: 0.85 }));
-      }
-      sky.appendChild(g);
-    });
-    svg.appendChild(sky);
-
-    svg.appendChild(make("ellipse", { cx: VP.x, cy: VP.y, rx: 520, ry: 70, fill: "url(#haze)" }));
-    svg.appendChild(line(0, VP.y, W, VP.y, { stroke: cs('--building-edge'), "stroke-width": 1, opacity: 0.5 }));
-    svg.appendChild(make("rect", { x: 0, y: VP.y, width: W, height: H - VP.y, fill: "url(#ground)" }));
-
-    /* bottom anchors — symmetric about 640
-       BRIDGE  L : outer 100  inner 440
-       ROAD    C : 470 .. 810  (centre dash 640)
-       RAIL    R : inner 840  outer 1180   (mirror of bridge)  */
-    const brOut=140, brIn=440, brMid=(brOut+brIn)/2;   // bridge deck (left)
-    const rdL=540, rdR=740;                             // road (centre)
-    const railL=865, railR=1115, bedL=840, bedR=1140;   // railroad (right)
-
-    // ===== CENTRE — ROAD =====
-    (function () {
-      const g = make("g", {});
-      g.appendChild(poly([VP, pt(rdL,1), pt(rdR,1)], { fill: cs('--ground-near'), opacity: 0.94 }));
-      g.appendChild(line(VP.x, VP.y, xAt(rdL,FLOOR), FLOOR, { stroke: "url(#goldray)", "stroke-width": 5 }));
-      g.appendChild(line(VP.x, VP.y, xAt(rdR,FLOOR), FLOOR, { stroke: "url(#goldray)", "stroke-width": 5 }));
-      for (let i=1;i<=9;i++){
-        const t0=Math.pow(i/10,1.7), t1=Math.pow((i+0.45)/10,1.7);
-        const a=pt(640,t0), b=pt(640,t1), wA=1+4.5*t0, wB=1+4.5*t1;
-        g.appendChild(poly([{x:a.x-wA,y:a.y},{x:a.x+wA,y:a.y},{x:b.x+wB,y:b.y},{x:b.x-wB,y:b.y}], { fill: GOLDB, opacity: 0.9 }));
-      }
-      svg.appendChild(g);
-    })();
-
-    // ===== RIGHT — RAILROAD =====
-    (function () {
-      const g = make("g", {});
-      g.appendChild(poly([VP, pt(bedL,1), pt(bedR,1)], { fill: cs('--ground-far'), opacity: 0.42 }));
-      const N=17;
-      for (let i=1;i<=N;i++){
-        const t=Math.pow(i/N,1.9), y=VP.y+(FLOOR-VP.y)*t;
-        const lx=xAt(railL,y), rx=xAt(railR,y);
-        const over=20*t, th=1.4+5*t;     // overhang scales with perspective — ties narrow toward the vanishing point
-        g.appendChild(make("rect", { x: lx-over, y: y-th/2, width:(rx-lx)+over*2, height:th, fill: cs('--rail-tie'), opacity:0.55 }));
-      }
-      g.appendChild(line(VP.x, VP.y, xAt(railL,FLOOR), FLOOR, { stroke:"url(#goldray)", "stroke-width":5 }));
-      g.appendChild(line(VP.x, VP.y, xAt(railR,FLOOR), FLOOR, { stroke:"url(#goldray)", "stroke-width":5 }));
-      svg.appendChild(g);
-    })();
-
-    // ===== LEFT — BRIDGE (straight cables, no towers) =====
-    (function () {
-      const g = make("g", {});
-      // deck surface
-      g.appendChild(poly([VP, pt(brIn,1), pt(brOut,1)], { fill: cs('--ground-far'), opacity: 0.5 }));
-      // deck edge girders (gold)
-      g.appendChild(line(VP.x, VP.y, xAt(brIn,FLOOR), FLOOR, { stroke:"url(#goldray)", "stroke-width":5 }));
-      g.appendChild(line(VP.x, VP.y, xAt(brOut,FLOOR), FLOOR, { stroke:"url(#goldray)", "stroke-width":5 }));
-
-      const tT = 0.60, tA = 0.93, Hpeak = 52;          // tower position, anchorage, peak height
-      function clearance(t){
-        if (t <= tT) return Hpeak * (t / tT);          // rise to the tower
-        if (t <= tA) return Hpeak * (1 - (t - tT)/(tA - tT));   // fall back to the deck
-        return 0;
-      }
-      function cableRun(E){
-        const p0=pt(E,0), pT=pt(E,tT), pA=pt(E,tA);
-        // main cable rises to the tower then returns to the deck at the anchorage (no cut-off)
-        g.appendChild(make('polyline',{ points:
-          p0.x.toFixed(1)+','+p0.y.toFixed(1)+' '+pT.x.toFixed(1)+','+(pT.y-Hpeak).toFixed(1)+' '+pA.x.toFixed(1)+','+pA.y.toFixed(1),
-          fill:'none', stroke:GOLDB, "stroke-width":1.3, opacity:0.5 }));
-        // vertical hangers
-        for (let t=0.12;t<tA;t+=0.05){ const p=pt(E,t); const cy=p.y-clearance(t); if (p.y-cy<5) continue; g.appendChild(line(p.x,cy,p.x,p.y,{ stroke:GOLDB,"stroke-width":0.7,opacity:0.22 })); }
-        // slender tower post at the peak (cable-coloured, not white)
-        g.appendChild(line(pT.x, pT.y-Hpeak-3, pT.x, pT.y+9, { stroke:GOLDB,"stroke-width":1.6,"stroke-linecap":"round",opacity:0.5 }));
-      }
-      cableRun(brIn);
-      cableRun(brOut);
-      svg.appendChild(g);
-    })();
-
-    svg.appendChild(make("ellipse", { cx: VP.x, cy: VP.y, rx: 90, ry: 30, fill: "url(#vpglow)" }));
+  function cssVar(name, fallback) {
+    var v = getComputedStyle(document.documentElement).getPropertyValue(name);
+    return (v && v.trim()) || fallback;
   }
 
-  build();
-  window.__buildScene = build;
+  var colors = {
+    skyTop: cssVar('--sky-top', '#0c1733'),
+    skyMid: cssVar('--sky-mid', '#14224a'),
+    skyLow: cssVar('--sky-low', '#1d3061'),
+    groundNear: cssVar('--ground-near', '#0a1430'),
+    groundFar: cssVar('--ground-far', '#16264f'),
+    building: cssVar('--building', '#1f3061'),
+    buildingEdge: cssVar('--building-edge', '#2c4079'),
+    window: cssVar('--window', '#d9b65a'),
+    railTie: cssVar('--rail-tie', '#b3c0dd'),
+    gold: cssVar('--gold', '#c9a24b'),
+    goldBright: cssVar('--gold-bright', '#e7cd83')
+  };
+
+  function el(tag, attrs) {
+    var node = document.createElementNS(NS, tag);
+    for (var k in attrs) {
+      if (Object.prototype.hasOwnProperty.call(attrs, k)) {
+        node.setAttribute(k, attrs[k]);
+      }
+    }
+    return node;
+  }
+
+  function defs() {
+    var d = el('defs', {});
+
+    var sky = el('linearGradient', { id: 'scene-sky', x1: '0', y1: '0', x2: '0', y2: '1' });
+    sky.appendChild(el('stop', { offset: '0%', 'stop-color': colors.skyTop }));
+    sky.appendChild(el('stop', { offset: '55%', 'stop-color': colors.skyMid }));
+    sky.appendChild(el('stop', { offset: '100%', 'stop-color': colors.skyLow }));
+    d.appendChild(sky);
+
+    var ground = el('linearGradient', { id: 'scene-ground', x1: '0', y1: '0', x2: '0', y2: '1' });
+    ground.appendChild(el('stop', { offset: '0%', 'stop-color': colors.groundFar }));
+    ground.appendChild(el('stop', { offset: '100%', 'stop-color': colors.groundNear }));
+    d.appendChild(ground);
+
+    var glow = el('radialGradient', { id: 'scene-glow', cx: '50%', cy: '38%', r: '55%' });
+    glow.appendChild(el('stop', { offset: '0%', 'stop-color': colors.goldBright, 'stop-opacity': '0.16' }));
+    glow.appendChild(el('stop', { offset: '100%', 'stop-color': colors.goldBright, 'stop-opacity': '0' }));
+    d.appendChild(glow);
+
+    return d;
+  }
+
+  function sky() {
+    var g = el('g', {});
+    g.appendChild(el('rect', { x: 0, y: 0, width: W, height: HORIZON + 40, fill: 'url(#scene-sky)' }));
+    g.appendChild(el('rect', { x: 0, y: 0, width: W, height: HORIZON + 40, fill: 'url(#scene-glow)' }));
+
+    // distant stars
+    var rng = mulberry32(7);
+    for (var i = 0; i < 70; i++) {
+      var x = rng() * W;
+      var y = rng() * (HORIZON - 60);
+      var r = 0.6 + rng() * 1.3;
+      var star = el('circle', {
+        cx: x.toFixed(1), cy: y.toFixed(1), r: r.toFixed(2),
+        fill: '#ffffff', opacity: (0.25 + rng() * 0.5).toFixed(2)
+      });
+      star.appendChild(el('animate', {
+        attributeName: 'opacity',
+        values: (0.15) + ';' + (0.7) + ';' + (0.15),
+        dur: (3 + rng() * 4).toFixed(1) + 's',
+        repeatCount: 'indefinite'
+      }));
+      g.appendChild(star);
+    }
+    return g;
+  }
+
+  function mulberry32(seed) {
+    return function () {
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function skyline() {
+    var g = el('g', {});
+    var rng = mulberry32(42);
+    var n = 16;
+    var bw = W / n;
+
+    for (var i = 0; i < n; i++) {
+      var bh = 60 + rng() * 190;
+      var x = i * bw - 10;
+      var w = bw * (0.62 + rng() * 0.3);
+      var y = HORIZON - bh;
+
+      g.appendChild(el('rect', {
+        x: x.toFixed(1), y: y.toFixed(1), width: w.toFixed(1), height: (bh + 6).toFixed(1),
+        fill: colors.building, stroke: colors.buildingEdge, 'stroke-width': '1'
+      }));
+
+      // lit windows grid
+      var cols = Math.max(2, Math.round(w / 16));
+      var rows = Math.max(2, Math.round(bh / 18));
+      for (var c = 0; c < cols; c++) {
+        for (var r = 0; r < rows; r++) {
+          if (rng() > 0.62) continue;
+          var wx = x + 6 + c * (w - 12) / cols;
+          var wy = y + 8 + r * (bh - 16) / rows;
+          var win = el('rect', {
+            x: wx.toFixed(1), y: wy.toFixed(1), width: '3.4', height: '5',
+            fill: colors.window, opacity: (0.35 + rng() * 0.5).toFixed(2)
+          });
+          win.appendChild(el('animate', {
+            attributeName: 'opacity',
+            values: (0.25) + ';' + (0.85) + ';' + (0.25),
+            dur: (4 + rng() * 6).toFixed(1) + 's',
+            begin: (rng() * 6).toFixed(1) + 's',
+            repeatCount: 'indefinite'
+          }));
+          g.appendChild(win);
+        }
+      }
+    }
+    return g;
+  }
+
+  function ground() {
+    var g = el('g', {});
+    g.appendChild(el('rect', { x: 0, y: HORIZON, width: W, height: H - HORIZON, fill: 'url(#scene-ground)' }));
+    // faint horizon glow line
+    g.appendChild(el('rect', { x: 0, y: HORIZON - 1, width: W, height: 2, fill: colors.goldBright, opacity: '0.18' }));
+    return g;
+  }
+
+  function corridor() {
+    // Three corridors recede toward the same horizon line, but only the
+    // railroad converges to the shared vanishing point. The transitway and
+    // roadway run as their own parallel bands — holding their separation
+    // from the rails all the way up — and simply fade into the horizon,
+    // so the three never visually merge into one point.
+    var g = el('g', { 'stroke-linecap': 'round' });
+    var vanishX = W / 2;
+    var vanishY = HORIZON; // corridors terminate right at the gold horizon line
+    var baseY = H + 40;
+
+    function laneY(t) {
+      return vanishY + t * (baseY - vanishY);
+    }
+    function ease(t) { return Math.pow(t, 1.9); }
+    // fades a band in gradually as it leaves the horizon, rather than
+    // having it appear/disappear abruptly at the vanishing point
+    function fade(t) { return Math.min(1, t / 0.16); }
+
+    // Straight line from a far-field offset to a near-field offset —
+    // used for bands that keep their own separation (parallel corridors).
+    function bandX(farOffset, nearOffset, t) {
+      return vanishX + farOffset + t * (nearOffset - farOffset);
+    }
+    function bandPath(farOffsetL, nearOffsetL, farOffsetR, nearOffsetR, riseAt) {
+      var rise = riseAt || function () { return 0; };
+      var farL = [bandX(farOffsetL, nearOffsetL, 0), laneY(0) - rise(0)];
+      var farR = [bandX(farOffsetR, nearOffsetR, 0), laneY(0) - rise(0)];
+      var nearR = [bandX(farOffsetR, nearOffsetR, 1), laneY(1) - rise(1)];
+      var nearL = [bandX(farOffsetL, nearOffsetL, 1), laneY(1) - rise(1)];
+      return 'M ' + farL.join(',') + ' L ' + farR.join(',') + ' L ' + nearR.join(',') + ' L ' + nearL.join(',') + ' Z';
+    }
+
+    /* ---------------- Railroad (center) — converges to the vanishing point ---------------- */
+    var railSpread = 230;
+    var railNearOffset = 9;
+
+    function railPath(sign) {
+      var x1 = vanishX + sign * railNearOffset;
+      var x2 = vanishX + sign * railSpread;
+      return 'M ' + x1.toFixed(1) + ' ' + vanishY + ' L ' + x2.toFixed(1) + ' ' + baseY;
+    }
+    [-1, 1].forEach(function (sign) {
+      g.appendChild(el('path', { d: railPath(sign), stroke: colors.railTie, 'stroke-width': '2.4', fill: 'none', opacity: '0.55' }));
+      g.appendChild(el('path', { d: railPath(sign), stroke: colors.goldBright, 'stroke-width': '1', fill: 'none', opacity: '0.35' }));
+    });
+    var tieCount = 22;
+    for (var i = 0; i < tieCount; i++) {
+      var t = i / (tieCount - 1);
+      var e = ease(t);
+      var y = vanishY + e * (baseY - vanishY);
+      var spread = railNearOffset + e * (railSpread - railNearOffset);
+      var tieW = spread * 2 * 1.18;
+      var tieH = 2 + e * 5;
+      var x = vanishX - tieW / 2;
+      g.appendChild(el('rect', {
+        x: x.toFixed(1), y: (y - tieH / 2).toFixed(1),
+        width: tieW.toFixed(1), height: tieH.toFixed(1),
+        fill: colors.railTie, opacity: (0.16 + e * 0.4).toFixed(2)
+      }));
+    }
+
+    /* ---------------- Elevated transitway (left) — parallel band, own vanishing ---------------- */
+    // Far-field (near horizon) edges sit well clear of the rail's far edge (-9),
+    // and near-field edges keep the same separation at the bottom — the band
+    // never narrows down into the rail's vanishing point.
+    var twFarL = -150, twNearL = -480;   // outer edge
+    var twFarR = -85, twNearR = -345;    // inner edge (rail-facing)
+    var twRiseNear = 92;
+    var twGirderDepth = 17; // thickness of the structural girder beneath the deck — sells the "elevated" read
+    function twRise(t) { return twRiseNear * ease(t); }
+    function twGirderRise(t) { return Math.max(0, twRise(t) - twGirderDepth * Math.max(ease(t), 0.22)); }
+    function twCenterX(t) { return (bandX(twFarL, twNearL, t) + bandX(twFarR, twNearR, t)) / 2; }
+
+    // ground shadow the structure casts straight below it — without this cue
+    // the deck reads as flat scenery rather than something hovering above grade
+    g.appendChild(el('path', {
+      d: bandPath(twFarL, twNearL, twFarR, twNearR, function () { return 0; }),
+      fill: colors.groundNear, opacity: '0.4'
+    }));
+
+    var pierCount = 9;
+    for (var p = 1; p < pierCount; p++) {
+      var pt = p / (pierCount - 1);
+      var pe = ease(pt);
+      var cx = twCenterX(pe);
+      var deckY = laneY(pe) - twRise(pe);
+      var groundYp = laneY(pe);
+      var pw = 1.4 + pe * 5;
+      g.appendChild(el('line', {
+        x1: cx.toFixed(1), y1: (deckY + 2).toFixed(1),
+        x2: cx.toFixed(1), y2: groundYp.toFixed(1),
+        stroke: colors.buildingEdge, 'stroke-width': pw.toFixed(1), opacity: ((0.22 + pe * 0.4) * fade(pe)).toFixed(2)
+      }));
+    }
+    // structural girder band — sits just beneath the deck slab and peeks out
+    // along its lower edge, giving the deck visible depth/thickness in profile
+    g.appendChild(el('path', {
+      d: bandPath(twFarL, twNearL, twFarR, twNearR, twGirderRise),
+      fill: colors.buildingEdge, opacity: '0.7'
+    }));
+    g.appendChild(el('path', {
+      d: bandPath(twFarL, twNearL, twFarR, twNearR, twRise),
+      fill: colors.building, stroke: colors.buildingEdge, 'stroke-width': '1', opacity: '0.85'
+    }));
+    // gold edge-light strip along the inner (rail-facing) edge of the deck
+    var twEdgeFarPt = [bandX(twFarR, twNearR, 0), laneY(0) - twRise(0)];
+    var twEdgeNearPt = [bandX(twFarR, twNearR, 1), laneY(1) - twRise(1)];
+    g.appendChild(el('path', {
+      d: 'M ' + twEdgeFarPt[0].toFixed(1) + ',' + twEdgeFarPt[1].toFixed(1) + ' L ' + twEdgeNearPt[0].toFixed(1) + ',' + twEdgeNearPt[1].toFixed(1),
+      stroke: colors.goldBright, 'stroke-width': '1.4', fill: 'none', opacity: '0.4'
+    }));
+    var lightCount = 8;
+    for (var l = 1; l < lightCount; l++) {
+      var lt = l / (lightCount - 1);
+      var le = ease(lt);
+      var lx = twCenterX(le);
+      var ly = laneY(le) - twRise(le) - (3 + le * 4);
+      var lr = 0.9 + le * 1.6;
+      var dot = el('circle', { cx: lx.toFixed(1), cy: ly.toFixed(1), r: lr.toFixed(2), fill: colors.window, opacity: ((0.3 + le * 0.45) * fade(le)).toFixed(2) });
+      dot.appendChild(el('animate', {
+        attributeName: 'opacity',
+        values: '0;' + (0.7 * fade(le)).toFixed(2) + ';0',
+        dur: (3 + le * 3).toFixed(1) + 's',
+        begin: (le * 2).toFixed(1) + 's',
+        repeatCount: 'indefinite'
+      }));
+      g.appendChild(dot);
+    }
+
+    // a pair of small guideway rails running lengthwise down the deck —
+    // simple receding lines that read as a track bed without fighting the
+    // deck's own diagonal angle the way cross-ties did
+    var twGaugeFrac = 0.46; // how much of the deck's width the two rails span
+    function twDeckHalfWidth(t) { return (bandX(twFarR, twNearR, t) - bandX(twFarL, twNearL, t)) / 2; }
+    function twRailX(side, t) { return twCenterX(t) + side * twDeckHalfWidth(t) * twGaugeFrac; }
+    function twRailY(t) { return laneY(t) - twRise(t) - 1; }
+
+    [-1, 1].forEach(function (side) {
+      g.appendChild(el('path', {
+        d: 'M ' + twRailX(side, 0).toFixed(1) + ',' + twRailY(0).toFixed(1) + ' L ' + twRailX(side, 1).toFixed(1) + ',' + twRailY(1).toFixed(1),
+        stroke: colors.railTie, 'stroke-width': '1.2', fill: 'none', opacity: '0.4'
+      }));
+    });
+
+    /* ---------------- Roadway (right) — a mirror image of the transitway's angle ---------------- */
+    // Exactly the transitway's far/near offsets, sign-flipped. Same angles,
+    // same widening, same clearance from the rail — just reflected onto the
+    // other side, so the two corridors read as matching counterparts of the
+    // railroad rather than two differently-shaped, unrelated bands.
+    var rdFarL = -twFarR, rdNearL = -twNearR;   // inner edge (rail-facing) — mirrors the transitway's inner edge
+    var rdFarR = -twFarL, rdNearR = -twNearL;   // outer edge — mirrors the transitway's outer edge
+    g.appendChild(el('path', {
+      d: bandPath(rdFarL, rdNearL, rdFarR, rdNearR, function () { return 0; }),
+      fill: colors.groundFar, opacity: '0.4'
+    }));
+    [[rdFarL, rdNearL], [rdFarR, rdNearR]].forEach(function (pair) {
+      g.appendChild(el('path', {
+        d: 'M ' + bandX(pair[0], pair[1], 0).toFixed(1) + ',' + laneY(0).toFixed(1) + ' L ' + bandX(pair[0], pair[1], 1).toFixed(1) + ',' + laneY(1).toFixed(1),
+        stroke: colors.railTie, 'stroke-width': '1.2', fill: 'none', opacity: '0.3'
+      }));
+    });
+    var dashCount = 16;
+    for (var d2 = 1; d2 < dashCount; d2++) {
+      var dt0 = (d2 - 0.32) / dashCount;
+      var dt1 = (d2 + 0.32) / dashCount;
+      var de0 = ease(dt0), de1 = ease(dt1);
+      var x0 = bandX((rdFarL + rdFarR) / 2, (rdNearL + rdNearR) / 2, de0), y0 = laneY(de0);
+      var x1 = bandX((rdFarL + rdFarR) / 2, (rdNearL + rdNearR) / 2, de1), y1 = laneY(de1);
+      g.appendChild(el('line', {
+        x1: x0.toFixed(1), y1: y0.toFixed(1), x2: x1.toFixed(1), y2: y1.toFixed(1),
+        stroke: colors.goldBright, 'stroke-width': (0.8 + de1 * 2.2).toFixed(1), opacity: ((0.18 + de1 * 0.35) * fade(de1)).toFixed(2)
+      }));
+    }
+    // a pair of headlight glows traveling down the roadway
+    [0, 3.4].forEach(function (delay) {
+      var hl = el('circle', { r: '2.6', fill: colors.window, opacity: '0' });
+      var cFar = (rdFarL + rdFarR) / 2 + 8;
+      var cNear = (rdNearL + rdNearR) / 2 + 8;
+      hl.appendChild(el('animate', { attributeName: 'cx', values: bandX(cFar, cNear, 0).toFixed(1) + ';' + bandX(cFar, cNear, 1).toFixed(1), dur: '7s', begin: delay + 's', repeatCount: 'indefinite' }));
+      hl.appendChild(el('animate', { attributeName: 'cy', values: laneY(0).toFixed(1) + ';' + laneY(1).toFixed(1), dur: '7s', begin: delay + 's', repeatCount: 'indefinite' }));
+      hl.appendChild(el('animate', { attributeName: 'opacity', values: '0;0.75;0', dur: '7s', begin: delay + 's', repeatCount: 'indefinite' }));
+      hl.appendChild(el('animate', { attributeName: 'r', values: '1.2;4.6', dur: '7s', begin: delay + 's', repeatCount: 'indefinite' }));
+      g.appendChild(hl);
+    });
+
+    /* ---------------- Rail signal glow (center) ---------------- */
+    var glowDot = el('circle', { r: '3.4', fill: colors.goldBright, opacity: '0' });
+    glowDot.appendChild(el('animate', { attributeName: 'cx', values: vanishX + ';' + vanishX, dur: '7s', repeatCount: 'indefinite' }));
+    glowDot.appendChild(el('animate', { attributeName: 'cy', values: (vanishY + 2) + ';' + (baseY - 30), dur: '7s', repeatCount: 'indefinite' }));
+    glowDot.appendChild(el('animate', { attributeName: 'opacity', values: '0;0.8;0', dur: '7s', repeatCount: 'indefinite' }));
+    glowDot.appendChild(el('animate', { attributeName: 'r', values: '1.4;5.5', dur: '7s', repeatCount: 'indefinite' }));
+    g.appendChild(glowDot);
+
+    return g;
+  }
+
+  function build() {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.appendChild(defs());
+    svg.appendChild(sky());
+    svg.appendChild(skyline());
+    svg.appendChild(ground());
+    svg.appendChild(corridor());
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', build);
+  } else {
+    build();
+  }
 })();
