@@ -293,6 +293,19 @@
         stroke: colors.railTie, 'stroke-width': '1.2', fill: 'none', opacity: '0.4'
       }));
     });
+    // cross-ties spanning the gauge between the two guideway rails — spaced
+    // by eased t so they compress toward the horizon just like the main line's
+    var twTieCount = 16;
+    for (var tw = 1; tw < twTieCount; tw++) {
+      var twt = tw / twTieCount;
+      var twe = ease(twt);
+      g.appendChild(el('line', {
+        x1: twRailX(-1, twt).toFixed(1), y1: twRailY(twt).toFixed(1),
+        x2: twRailX(1, twt).toFixed(1), y2: twRailY(twt).toFixed(1),
+        stroke: colors.railTie, 'stroke-width': (0.8 + twe * 2.2).toFixed(1),
+        opacity: ((0.14 + twe * 0.34) * fade(twe)).toFixed(2)
+      }));
+    }
 
     /* ---------------- Roadway (right) — a mirror image of the transitway's angle ---------------- */
     // Exactly the transitway's far/near offsets, sign-flipped. Same angles,
