@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MartinCo Games</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Small, well-made games from MartinCo Games: Hump Day, Marked and Moving Day.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Archivo:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: studio page that matches martinco.llc: the Martin & Company lockup and serif/sans pairing, navy hero tones with gold. One full-width row per game (screenshot beside copy, alternating), then studio note and contact. Dark-first. */
+:root{
+  --navy:#0e1c33; --navy2:#12233f; --panel:#1a2c4b; --line:#2b3e62; --ink:#f1ebdd; --muted:#c3c9d6;
+  --gold:#c9a24b; --goldInk:#15243f; --chip:#1a2c4b;
+  --display:"Libre Baskerville", Georgia, serif;
+  --body:"Archivo", system-ui, sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--navy:#f6f2e9;--navy2:#fdfbf6;--panel:#efe9dc;--line:#e7dfd0;--ink:#15243f;--muted:#465275;--gold:#a9842c;--goldInk:#fdfbf6;--chip:#efe9dc;color-scheme:light}}
+:root[data-theme="light"]{--navy:#f6f2e9;--navy2:#fdfbf6;--panel:#efe9dc;--line:#e7dfd0;--ink:#15243f;--muted:#465275;--gold:#a9842c;--goldInk:#fdfbf6;--chip:#efe9dc;color-scheme:light}
+*{box-sizing:border-box}
+body{background:var(--navy);color:var(--ink);font:400 16px/1.55 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+a{color:var(--gold)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:6px}
+
+/* masthead */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:20px;flex-wrap:wrap}
+.mark{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.mark img{height:38px;width:auto;flex:none}
+.wm{display:flex;flex-direction:column;line-height:1}
+.wm1{font:700 17px var(--display);letter-spacing:.04em}
+.wm2{font:600 9px var(--body);letter-spacing:.46em;color:var(--gold);margin-top:6px}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .mark img{filter:brightness(.25) sepia(1) hue-rotate(185deg) saturate(3)}}
+:root[data-theme="light"] .mark img{filter:brightness(.25) sepia(1) hue-rotate(185deg) saturate(3)}
+.top nav{display:flex;gap:18px;font-weight:600;font-size:15px;flex-wrap:wrap}
+.top nav a{color:var(--muted);text-decoration:none}
+.top nav a:hover{color:var(--ink)}
+
+.hero{padding-block:40px 56px;display:grid;gap:18px;max-width:760px}
+.eyebrow{font:700 12px var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.hero h1{font:700 clamp(36px,6vw,64px)/1.08 var(--display);margin:0;letter-spacing:.005em;text-wrap:balance}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p{margin:0;color:var(--muted);font-size:18px;max-width:58ch}
+
+/* game rows */
+.games{display:grid;gap:28px;padding-bottom:64px}
+.game{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:32px;align-items:center;background:var(--navy2);border:1px solid var(--line);border-radius:4px;padding:28px}
+.game:nth-child(even) .shot{order:2}
+.shot{display:flex;justify-content:center;min-width:0}
+.copy{display:grid;gap:14px;min-width:0}
+.copy h2{font:700 clamp(28px,3.6vw,40px)/1.1 var(--display);margin:0}
+.copy .pitch{font-size:18px;margin:0;color:var(--ink);max-width:52ch}
+.copy p{margin:0;color:var(--muted);max-width:60ch}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:600 13px var(--body);padding:5px 11px;border-radius:999px;background:var(--chip);color:var(--ink)}
+.status{font:700 12px var(--body);letter-spacing:.1em;text-transform:uppercase;padding:5px 11px;border-radius:999px;border:1.5px solid var(--gold);color:var(--gold)}
+.status.live{background:var(--gold);color:var(--goldInk)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:2px 0 0;padding:0;list-style:none}
+.facts li{border-top:1px solid var(--line);padding-top:8px;font-size:14px;color:var(--muted)}
+.facts b{display:block;color:var(--ink);font:700 15px var(--body)}
+.cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.btn{font:600 14px var(--body);letter-spacing:.04em;padding:13px 22px;border-radius:2px;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.btn.gold{background:var(--gold);color:var(--goldInk)}
+.btn.ghost{border:1.5px solid var(--line);color:var(--ink)}
+.btn.soon{border:1.5px dashed var(--line);color:var(--muted);cursor:default}
+
+/* screenshot frames */
+.phone{width:min(300px,100%);aspect-ratio:390/800;border-radius:34px;padding:10px;background:#0A0F18;box-shadow:0 24px 50px rgba(0,0,0,.35),inset 0 0 0 2px #2A3446}
+.phone img{display:block;width:100%;height:100%;object-fit:cover;border-radius:26px}
+.wide{width:100%;max-width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;border:1px solid var(--line);box-shadow:0 20px 40px rgba(0,0,0,.25)}
+.wide img{display:block;width:100%;height:100%;object-fit:cover}
+.wide.capsule{aspect-ratio:920/430}
+.placeholder{width:100%;height:100%;display:grid;place-items:center;text-align:center;padding:16px;
+  background:repeating-linear-gradient(135deg,var(--panel) 0 14px,var(--navy2) 14px 28px);color:var(--muted)}
+.placeholder b{display:block;font:700 24px var(--display);color:var(--ink)}
+.placeholder small{font-size:13px}
+
+/* studio + footer */
+.studio{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:32px;padding-block:8px 64px;align-items:start}
+.studio h2{font:700 30px/1.1 var(--display);margin:0 0 12px}
+.studio p{margin:0 0 12px;color:var(--muted);max-width:62ch}
+.contact{background:var(--navy2);border:1px solid var(--line);border-radius:4px;padding:20px;display:grid;gap:10px}
+.contact .mail{font:700 18px var(--body);color:var(--ink);user-select:all;word-break:break-all}
+.copybtn{justify-self:start;font:700 14px var(--body);padding:9px 14px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+footer{border-top:1px solid var(--line);padding-block:20px 28px;color:var(--muted);font-size:14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+@media (max-width:760px){
+  .game{grid-template-columns:1fr;padding:18px;gap:22px}
+  .game:nth-child(even) .shot{order:0}
+  .studio{grid-template-columns:1fr}
+  .hero{padding-block:24px 36px}
+}
+</style>
+</head>
+<body>
+
+
+<div class="wrap" id="top">
+  <header class="top">
+    <a class="mark" href="#top" aria-label="MartinCo Games, back to top">
+      <img src="img/mco-cream.png" alt="" width="49" height="38">
+      <span class="wm"><span class="wm1">MARTIN &amp; COMPANY</span><span class="wm2">GAMES</span></span>
+    </a>
+    <nav aria-label="Games">
+      <a href="#bark-royale">Bark Royale</a>
+      <a href="#hump-day">Hump Day</a>
+      <a href="#moving-day">Moving Day</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <span class="eyebrow">MartinCo Games · a Martin &amp; Company studio</span>
+    <h1>Small games, built with <em>care</em>.</h1>
+    <p>We make games that are quick to learn and hard to put down: a dogs-versus-flying-cats battle royale on Roblox, a wooden-train puzzle for your phone, and a box-hauling adventure for Steam.</p>
+  </section>
+
+  <main class="games">
+    <article class="game" id="bark-royale">
+      <div class="shot"><div class="wide"><img src="img/bark-royale.jpg" alt="Bark Royale key art: a golden dog carries a backpack full of kittens and a cat launcher, under the title Bark Royale and the line Good dogs. Flying cats." loading="lazy"></div></div>
+      <div class="copy">
+        <div class="chips"><span class="status live">Out now</span><span class="chip">Roblox</span><span class="chip">Battle royale</span></div>
+        <h2>Bark Royale</h2>
+        <p class="pitch">Good dogs. Flying cats.</p>
+        <p>Drop onto Whisker Island and launch cats at the other dogs. Grab ice, bounce, boom and rocket cats, and stay out of bathtime. Last dog standing wins.</p>
+        <ul class="facts">
+          <li><b>Whisker Island</b>Drop in and fight your way out</li>
+          <li><b>Cat launchers</b>Ice, bounce, boom and rocket cats</li>
+          <li><b>Last dog standing</b>Avoid bathtime to win</li>
+        </ul>
+        <div class="cta"><a class="btn gold" href="https://www.roblox.com/games/122076682121119/Bark-Royale" target="_blank" rel="noopener">Play on Roblox</a></div>
+      </div>
+    </article>
+
+    <article class="game" id="hump-day">
+      <div class="shot"><div class="phone"><img src="img/hump-day.jpg" alt="Hump Day gameplay: a wooden toy train yard on a bedroom floor, with an engine pulling cars out of a siding" loading="lazy"></div></div>
+      <div class="copy">
+        <div class="chips"><span class="status">Coming soon</span><span class="chip">iPhone</span><span class="chip">Android</span></div>
+        <h2>Hump Day</h2>
+        <p class="pitch">A shunting puzzle played with wooden toy trains on a kid's bedroom floor.</p>
+        <p>Read the work order, then pull, shove and drop cars between short sidings to build the train in exactly the right order. The engine only pulls a few cars at a time, so every move counts. Beat each level at par for three stars.</p>
+        <ul class="facts">
+          <li><b>30 levels</b>Every one checked by a solver</li>
+          <li><b>19 languages</b>Detected from your phone</li>
+          <li><b>Christmas world</b>A snowy village layout, coming later</li>
+        </ul>
+        <div class="cta"><span class="btn soon">App Store · coming soon</span><span class="btn soon">Google Play · coming soon</span></div>
+      </div>
+    </article>
+
+    <article class="game" id="moving-day">
+      <div class="shot"><div class="wide capsule"><img src="img/moving-day.jpg" alt="Moving Day key art: a mover in a hi-vis vest cheers as boxes fly out of a two-story house toward a Cousin's Moving Co. truck" loading="lazy"></div></div>
+      <div class="copy">
+        <div class="chips"><span class="status">In development</span><span class="chip">Steam</span><span class="chip">Mac</span></div>
+        <h2>Moving Day</h2>
+        <p class="pitch">You and a driver have to empty a hoarder's mansion, one box at a time.</p>
+        <p>Start with a beat-up pickup and get paid by the box. Toss boxes out the window if you dare (damages come out of your pay), crack the safe instead of hauling it, and maybe pocket something on the way out. Just don't get caught.</p>
+        <ul class="facts">
+          <li><b>$5</b>Planned launch price</li>
+          <li><b>2 to 6 hours</b>Rush it or take your time</li>
+          <li><b>Single-player</b>Co-op may follow</li>
+        </ul>
+        <div class="cta"><span class="btn soon">Wishlist on Steam · coming soon</span></div>
+      </div>
+    </article>
+  </main>
+
+  <section class="studio" id="contact">
+    <div>
+      <h2>About the studio</h2>
+      <p>MartinCo Games is the game studio of Martin &amp; Company Consulting LLC, based in South Florida. Our day job is railroad and transit construction, which is why trains keep showing up in our games (dogs and flying cats, too).</p>
+      <p>We keep our games honest: no pay-to-win, ads you can switch off, and puzzles that are fair.</p>
+    </div>
+    <div class="contact">
+      <span class="eyebrow">Press, partners and players</span>
+      <span class="mail" id="mail">kyle@martinco.llc</span>
+      <button class="copybtn" id="copyMail" type="button">Copy email</button>
+    </div>
+  </section>
+
+  <footer>
+    <span>© <span id="yr">2026</span> Martin &amp; Company Consulting LLC</span>
+  </footer>
+</div>
+
+<script>
+document.getElementById('yr').textContent=new Date().getFullYear();
+document.getElementById('copyMail').addEventListener('click',e=>{
+  const b=e.currentTarget,txt='kyle@martinco.llc';
+  const sel=()=>{const r=document.createRange();r.selectNodeContents(document.getElementById('mail'));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Selected, press copy'};
+  try{navigator.clipboard.writeText(txt).then(()=>{b.textContent='Copied'},sel)}catch(err){sel()}
+});
+</script>
+
+</body>
+</html>
